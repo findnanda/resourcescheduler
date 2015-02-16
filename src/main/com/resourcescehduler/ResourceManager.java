@@ -26,11 +26,7 @@ public class ResourceManager implements IResourceManager {
 	// get the resource if free
 	@Override
 	public Resource isResourceAvailable() {
-		Resource resource = allocateResource();
-		if (resource != null) {
-			return resource;
-		}
-		return null;
+		return allocateResource();
 	}
 
 	// allocate resource based on availability

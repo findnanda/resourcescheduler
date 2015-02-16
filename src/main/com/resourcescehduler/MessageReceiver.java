@@ -35,7 +35,7 @@ public class MessageReceiver {
 					resource.setStatus(Resource.BUSY);
 					resource.setMsgId(message.getMessageId());
 					logger.debug("receivedMessage, resource set to busy for "
-							+ message.getName());
+							+ message.getName() + " resource Id="+resource.getResourceId());
 					thread.start();
 				}
 			}
