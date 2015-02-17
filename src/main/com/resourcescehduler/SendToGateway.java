@@ -50,6 +50,19 @@ public class SendToGateway implements Runnable, ISendToGateway {
 		return this.sharedQueue.isEmpty();
 	}
 
+	/* (non-Javadoc)
+	 * @see com.resourcescehduler.ISendToGateway#isHeadMsg(com.resourcescehduler.vo.Message)
+	 */
+	@Override
+	public boolean isHeadMsg(Message message){
+		Message msg = this.sharedQueue.peek();
+		boolean retVal = false;
+		if(msg != null && message.getMessageId() == msg.getMessageId()){
+			retVal = true;
+			logger.debug("message to be picked up. ");
+		}
+		return retVal;
+	}
 	/**
 	 * @return BlockingQueue<Message>
 	 */

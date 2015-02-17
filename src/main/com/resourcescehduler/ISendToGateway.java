@@ -19,4 +19,6 @@ public interface ISendToGateway {
 	 */
 	public abstract void addToQueue(Message message) throws InterruptedException;
 
+	public abstract boolean isHeadMsg(Message message);
+
 }

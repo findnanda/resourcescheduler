@@ -31,12 +31,21 @@ public class MessageReceiver {
 				if ((resource = resourceManager.isResourceAvailable()) != null) {
 					Thread thread = new Thread((Runnable) sendToGateway);
 					logger.debug("receivedMessage, resource thread with resource id ="
-							+ resource.getResourceId());
+							+ resource.getResourceId()
+							+ " message = "
+							+ message.getMessageId());
 					resource.setStatus(Resource.BUSY);
 					resource.setMsgId(message.getMessageId());
 					logger.debug("receivedMessage, resource set to busy for "
-							+ message.getName() + " resource Id="+resource.getResourceId());
+							+ message.getName() + " resource Id="
+							+ resource.getResourceId());
 					thread.start();
+					while ((sendToGateway.isHeadMsg(message))) {
+						// Wake up and allocate new resource only if the
+						// received message is
+						// different from the head message.
+						Thread.sleep(500);
+					}
 				}
 			}
 		}
