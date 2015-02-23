@@ -50,7 +50,7 @@ public class SortingRules implements ISortingRules {
 
 	@Override
 	public void sortByPrioritisedGroupIds(boolean enableSort) {
-		((PriortisedGroupSortingStrategy)prioritisedGroupSortStrategy).switchOffCurrentSort(false);
+		((PriortisedGroupSortingStrategy)prioritisedGroupSortStrategy).switchOffCurrentSort(!enableSort);
 
 	}
 

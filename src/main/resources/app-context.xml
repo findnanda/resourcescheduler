@@ -19,8 +19,10 @@
 		<property name="groupCancellationReceiver" ref="groupCancellationReceiver" />
 		<property name="messagingQueue" ref="messagingQueue" />
 		<property name="sortRules" ref="sortingRules" />
+		<property name="forcePGSOff" value="false" />
+		<property name="groupPriortizationMap" ref="groupPriortizationMap" />
 	</bean>
-
+	<bean id="groupPriortizationMap" class="java.util.HashMap"/>
 
 	<bean id="resourceManager" class="com.resourcescehduler.ResourceManager">
 		<property name="resourcePool" value="${resourcePool}" />

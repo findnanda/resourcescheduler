@@ -55,18 +55,13 @@ public class Scheduler {
 			if(i >=30){
 				//Let few messages gets processed
 				if(i==30){
+					receiver.setForcePGSOff(true);
+					// During this time only default fifo will be on.
 					Thread.sleep(10000);
 				}
 				//Enable sort by group in descending order
 				sortRules.sortBygroupDesc(true);
 			} 
-			if(i>=40){
-				//Switch off group sorting
-				if(i==40){
-					Thread.sleep(10000);
-				}
-				sortRules.sortBygroupDesc(false);
-			}
 		}
 	}
 }

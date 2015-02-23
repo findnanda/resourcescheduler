@@ -29,17 +29,16 @@ public class MessageReceiver {
 	private ISortingRules sortRules;
 	private MessageProcessor holder;
 	private Thread thread = null;
-	private Map<Integer,Long> groupPriortization;
+	private Map<Integer,Long> groupPriortizationMap;
 	// Need not be static as this is singleton class
-	final AtomicLong groupPriorityGenerator;
-
+	private final AtomicLong groupPriorityGenerator;
+	private boolean forcePGSOff;
 	/**
 	 * 
 	 */
 	public MessageReceiver(){
 		holder = new MessageProcessor();
 		groupPriorityGenerator = new AtomicLong(0);
-		groupPriortization = new HashMap<Integer,Long>();
 	}
 	/**
 	 * This will receive messages from scheduler, prioritise them if needed and calls child thread to process them.
@@ -50,13 +49,11 @@ public class MessageReceiver {
 		final MessageDecorator msgDecorator = new MessageDecorator(message);
 		if (!groupCancellationReceiver.doesContain(message.getGroupId())) {
 			logger.debug("Received message with msgId : "+message.getMessageId());
-			prioritiseGroup(msgDecorator);
-			messagingQueue.addToQueue(msgDecorator);
-			if (thread == null) {				
-				thread = new Thread(holder);
-				thread.start();
+			if(!isForcePGSOff()){
+				prioritiseGroup(msgDecorator);
 			}
-			if (!thread.isAlive()) {
+			messagingQueue.addToQueue(msgDecorator);
+			if (thread == null || !thread.isAlive()) {				
 				thread = new Thread(holder);
 				thread.start();
 			}
@@ -70,14 +67,20 @@ public class MessageReceiver {
 		if(resourceManager.getResourcePool()>1){
 			sortRules.sortByPrioritisedGroupIds(true);
 			long groupPriority;
-			if(!groupPriortization.containsKey(msgDecorator.getMessage().getGroupId())){
+			if(!groupPriortizationMap.containsKey(msgDecorator.getMessage().getGroupId())){
 				groupPriority = groupPriorityGenerator.getAndIncrement();
-				groupPriortization.put(msgDecorator.getMessage().getGroupId(), groupPriority);
+				groupPriortizationMap.put(msgDecorator.getMessage().getGroupId(), groupPriority);
 			} else {
-				groupPriority = groupPriortization.get(msgDecorator.getMessage().getGroupId());
+				groupPriority = groupPriortizationMap.get(msgDecorator.getMessage().getGroupId());
 			}
 			msgDecorator.setGroupPriority(groupPriority);
+		} else {
+			disableGroupIdPrioritisation();
 		}
+	}
+	
+	private void disableGroupIdPrioritisation(){
+		sortRules.sortByPrioritisedGroupIds(false);
 	}
 	
 	/**
@@ -189,20 +192,32 @@ public class MessageReceiver {
 	public void setSortRules(ISortingRules sortRules) {
 		this.sortRules = sortRules;
 	}
-
-//	/**
-//	 * @return the sortRules
-//	 */
-//	public ISortingRules getSortRules() {
-//		return sortRules;
-//	}
-//
-//	/**
-//	 * @param sortRules
-//	 *            the sortRules to set
-//	 */
-//	public void setSortRules(ISortingRules sortRules) {
-//		this.sortRules = sortRules;
-//	}
+	/**
+	 * Return true if forcePGSOff is turned on.
+	 * @return the forcePGSOff
+	 */
+	public boolean isForcePGSOff() {
+		return forcePGSOff;
+	}
+	/**
+	 * This allows to force switch off the groupids prioritisation.
+	 * @param forcePGSOff the forcePGSOff to set
+	 */
+	public void setForcePGSOff(boolean forcePGSOff) {
+		this.forcePGSOff = forcePGSOff;
+		disableGroupIdPrioritisation();
+	}
+	/**
+	 * @return the groupPriortizationMap
+	 */
+	public Map<Integer,Long> getGroupPriortizationMap() {
+		return groupPriortizationMap;
+	}
+	/**
+	 * @param groupPriortizationMap the groupPriortizationMap to set
+	 */
+	public void setGroupPriortizationMap(Map<Integer,Long> groupPriortizationMap) {
+		this.groupPriortizationMap = groupPriortizationMap;
+	}
 
 }
