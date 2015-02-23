@@ -1,6 +1,7 @@
 package com.resoourcescehduler;
 
 import static org.junit.Assert.assertEquals;
+import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyInt;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -21,7 +22,10 @@ import com.resourcescehduler.IGroupCancellationReceiver;
 import com.resourcescehduler.IResourceManager;
 import com.resourcescehduler.ISendToGateway;
 import com.resourcescehduler.MessageReceiver;
+import com.resourcescehduler.vo.IMessagingQueue;
 import com.resourcescehduler.vo.Message;
+import com.resourcescehduler.vo.MessageDecorator;
+import com.resourcescehduler.vo.MessagingQueue;
 import com.resourcescehduler.vo.Resource;
 
 /**
@@ -34,6 +38,7 @@ public class MessageReceiverTest {
 	private ISendToGateway sendToGateway;
 	private IGroupCancellationReceiver groupCancellationReceiver;
 	private IResourceManager resourceManager;
+	private IMessagingQueue messagingQueue;
 
 	/**
 	 * 
@@ -46,15 +51,20 @@ public class MessageReceiverTest {
 			System.err.println("Cannot Initialize log4j");
 		}
 		logger.info("*********** In Setup ******************");
+		
 		receiver = new MessageReceiver();
+		
 		sendToGateway = Mockito.mock(ISendToGateway.class, withSettings()
 				.extraInterfaces(Runnable.class));
 		groupCancellationReceiver = Mockito
 				.mock(IGroupCancellationReceiver.class);
 		resourceManager = Mockito.mock(IResourceManager.class);
+		messagingQueue = Mockito.mock(MessagingQueue.class);
+		
 		receiver.setGroupCancellationReceiver(groupCancellationReceiver);
 		receiver.setSendToGateway(sendToGateway);
 		receiver.setResourceManager(resourceManager);
+		receiver.setMessagingQueue(messagingQueue);
 
 	}
 
@@ -67,7 +77,7 @@ public class MessageReceiverTest {
 		message.setGroupId(1);
 		message.setName("message " + 1);
 		when(groupCancellationReceiver.doesContain(1)).thenReturn(true);
-		receiver.receiveMessage(message);
+		receiver.receiver(message);
 		verify(groupCancellationReceiver).doesContain(1);
 	}
 
@@ -79,21 +89,24 @@ public class MessageReceiverTest {
 		message.setMessageId(1);
 		message.setGroupId(1);
 		message.setName("message " + 1);
-
+		MessageDecorator msgDec = new MessageDecorator(message);
 		Resource resource = new Resource();
 		resource.setStatus(Resource.PREPARE);
 		resource.setResourceId(1);
 
 		when(groupCancellationReceiver.doesContain(1)).thenReturn(false);
-		when(sendToGateway.isQueueEmpty()).thenReturn(false, true);
+		when(messagingQueue.isQueueEmpty()).thenReturn(false, true);
 		when(resourceManager.isResourceAvailable()).thenReturn(resource);
-
-		receiver.receiveMessage(message);
-
+		when(messagingQueue.getCurrentMessageId()).thenReturn(1);
+		when(messagingQueue.isHeadMsg(1)).thenReturn(true,false);
+				
+		receiver.receiver(message);
+		Thread.sleep(1000);
 		verify(groupCancellationReceiver).doesContain(anyInt());
-		verify(sendToGateway).addToQueue(message);
-		verify(sendToGateway, times(2)).isQueueEmpty();
-		verify(resourceManager).isResourceAvailable();
+		verify(messagingQueue).addToQueue((MessageDecorator)any());
+		verify(messagingQueue, times(2)).isQueueEmpty();
+		verify(messagingQueue, times(1)).getCurrentMessageId();
+		verify(messagingQueue,times(2)).isHeadMsg(1);
 
 		assertEquals(resource.getStatus(), Resource.BUSY);
 		assertEquals(resource.getMsgId(), 1);
@@ -104,23 +117,24 @@ public class MessageReceiverTest {
 	public void testReceiveMessageWithNoMessageInQueue()
 			throws InterruptedException {
 		logger.debug("testReceiveMessageWithNoMessageInQueue");
+		
 		Message message = new Message();
 		message.setMessageId(1);
 		message.setGroupId(1);
 		message.setName("message " + 1);
-
+		MessageDecorator msgDec = new MessageDecorator(message);
 		Resource resource = new Resource();
 		resource.setStatus(Resource.FREE);
 		resource.setResourceId(1);
 
 		when(groupCancellationReceiver.doesContain(1)).thenReturn(false);
-		when(sendToGateway.isQueueEmpty()).thenReturn(true);
+		when(messagingQueue.isQueueEmpty()).thenReturn(true);
 
-		receiver.receiveMessage(message);
+		receiver.receiver(message);
 
 		verify(groupCancellationReceiver).doesContain(anyInt());
-		verify(sendToGateway).addToQueue(message);
-		verify(sendToGateway, times(1)).isQueueEmpty();
+		verify(messagingQueue).addToQueue((MessageDecorator)any());
+		verify(messagingQueue, times(1)).isQueueEmpty();
 
 		assertEquals(resource.getStatus(), Resource.FREE);
 

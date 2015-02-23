@@ -18,13 +18,13 @@ public class Gateway implements IGateway {
 	@Override
 	public void send(Message message) {
 		try {
-			logger.debug("Gateway processing message with mesageId="
-					+ message.getMessageId());
-			Thread.sleep(10000);
+			logger.debug("*************Gateway started processing message with mesageId="
+					+ message.getMessageId()+ " GroupId="+message.getGroupId()+"**************");
+			Thread.sleep(2000);
 		} catch (InterruptedException e) {
-			e.printStackTrace();
+			logger.debug("Gateway Exception",e);
 		}
 		message.setCompleted(true);
-		logger.debug("Gateway processing done. ");
+		logger.debug("****************Gateway processing done.************************ ");
 	}
 }

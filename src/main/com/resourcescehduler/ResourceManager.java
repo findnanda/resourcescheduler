@@ -29,6 +29,7 @@ public class ResourceManager implements IResourceManager {
 		return allocateResource();
 	}
 
+	//TODO Remove synchronized block and apply reentrant lock
 	// allocate resource based on availability
 	private Resource allocateResource() {
 		Resource resource = null;
@@ -72,6 +73,7 @@ public class ResourceManager implements IResourceManager {
 
 	}
 
+	@Override
 	public int getResourcePool() {
 		return resourcePool;
 	}

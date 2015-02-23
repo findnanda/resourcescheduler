@@ -10,6 +10,10 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+/**
+ * @author NYalamanchili
+ * 
+ */
 public class GroupCancellationReceiver implements IGroupCancellationReceiver {
 	private static Log logger = LogFactory
 			.getLog(GroupCancellationReceiver.class);
@@ -17,21 +21,22 @@ public class GroupCancellationReceiver implements IGroupCancellationReceiver {
 	private ReadWriteLock globalLock;
 	private Lock readLock;
 	private Lock writeLock;
-	private Set<Integer> cancelGroupList;
+	private Set<Integer> cancelGroupSet;
+
 	/**
 	 * 
 	 */
 	public GroupCancellationReceiver() {
-		cancelGroupList = Collections.synchronizedSet(new HashSet<Integer>());
+		cancelGroupSet = new HashSet<Integer>();
 		globalLock = new ReentrantReadWriteLock();
 		readLock = globalLock.readLock();
 		writeLock = globalLock.writeLock();
 
 	}
 
-
-
-	/* (non-Javadoc)
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see com.resourcescehduler.IGroupCancellationReceiver#cancelGroup(int)
 	 */
 	@Override
@@ -39,25 +44,26 @@ public class GroupCancellationReceiver implements IGroupCancellationReceiver {
 		logger.debug("received cancellation request for groupid=" + groupId);
 		writeLock.lock();
 		try {
-			cancelGroupList.add(groupId);
+			cancelGroupSet.add(groupId);
+			logger.debug("added group id to the cancel set"+groupId);
 		} finally {
 			writeLock.unlock();
 		}
 	}
 
-	/* (non-Javadoc)
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see com.resourcescehduler.IGroupCancellationReceiver#doesContain(int)
 	 */
 	@Override
 	public boolean doesContain(int groupId) {
 		readLock.lock();
 		try {
-			for (Integer element : cancelGroupList) {
-				if (cancelGroupList.contains(groupId)) {
-					logger.debug("cancel groupId=" + groupId);
-					return true;
-				}
-			}
+			if (cancelGroupSet.contains(groupId)) {
+				logger.debug("Cancelled groupId=" + groupId);
+				return true;
+			} 
 		} finally {
 			readLock.unlock();
 		}
