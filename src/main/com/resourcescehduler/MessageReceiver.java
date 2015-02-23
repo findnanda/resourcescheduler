@@ -75,7 +75,7 @@ public class MessageReceiver {
 			}
 			msgDecorator.setGroupPriority(groupPriority);
 		} else {
-			disableGroupIdPrioritisation();
+			sortRules.sortByPrioritisedGroupIds(false);
 		}
 	}
 	
